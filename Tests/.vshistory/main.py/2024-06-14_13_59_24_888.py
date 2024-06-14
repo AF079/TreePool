@@ -1,6 +1,6 @@
-import Stuff.treelite.python.treelite as treelite 
+import treelite.python.treelite as treelite 
 #import treelite.runtime.python.treelite_runtime
-import Stuff.treelite.runtime.python.treelite_runtime as treelite_runtime
+import treelite.runtime.python.treelite_runtime as treelite_runtime
 import time
 
 import Stuff.tl2cgen.python.tl2cgen as tl2cgen
