@@ -1,0 +1,21 @@
+  
+static task assignment
+ 
+ InputToken token{dmat, pred_margin, -1, -1, out_result, pred_func_.get()};
+  std::vector<std::thread> threads(nthread);
+  for (std::size_t i = 0; i < nthread; ++i) {
+    token.rbegin = row_ptr[i];
+    token.rend = row_ptr[i + 1];
+    threads[i] = std::thread([=, &result_size, &total_size]() {
+      result_size[i] = token.pred_func_->PredictBatch(
+          token.dmat, token.rbegin, token.rend, token.pred_margin, token.out_result);
+
+      total_size += result_size[i];
+    });
+  }
+
+
+  for (int i = 0; i < nthread; ++i) {
+    threads[i].join();
+    // total_size += result_size[i];
+  }

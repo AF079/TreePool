@@ -1,0 +1,590 @@
+Predictor.cc
+/*!
+ * Copyright (c) 2023 by Contributors
+ * \file predictor.cc
+ * \author Hyunsu Cho
+ * \brief Load prediction function exported as a shared library
+ */
+
+#include <tl2cgen/data_matrix.h>
+#include <tl2cgen/detail/threading_utils/custom_tpool/custom_tpool.h>
+// #include <tl2cgen/detail/threading_utils/custom_tpool/spsc_queue.h>
+
+#include <tl2cgen/detail/threading_utils/omp_config.h>
+#include <tl2cgen/detail/threading_utils/parallel_for.h>
+#include <tl2cgen/logging.h>
+#include <tl2cgen/predictor.h>
+
+#include <chrono>
+#include <cstddef>
+#include <iostream>
+#include <memory>
+using namespace std;
+namespace {
+
+inline double GetTime() {
+  return std::chrono::duration<double>(std::chrono::high_resolution_clock::now().time_since_epoch())
+      .count();
+}
+
+// Where is "create batch" function?
+
+// Split batch function takes in input
+inline std::vector<std::size_t> SplitBatch(tl2cgen::DMatrix const* dmat, std::size_t split_factor) {
+  std::size_t const num_row = dmat->GetNumRow();
+  TL2CGEN_CHECK_LE(split_factor, num_row);
+  std::size_t const portion = num_row / split_factor;
+  std::size_t const remainder = num_row % split_factor;
+  std::vector<std::size_t> workload(split_factor, portion);
+  std::vector<std::size_t> row_ptr(split_factor + 1, 0);
+
+  for (std::size_t i = 0; i < remainder; ++i) {
+    ++workload[i];
+  }
+
+  std::size_t accum = 0;
+
+  for (std::size_t i = 0; i < split_factor; ++i) {
+    accum += workload[i];
+    row_ptr[i + 1] = accum;
+  }
+
+  return row_ptr;
+}
+
+}  // anonymous namespace
+
+namespace tl2cgen::predictor {
+
+struct InputToken {
+  DMatrix const* dmat;
+  bool pred_margin;
+  size_t rbegin, rend;
+  tl2cgen::predictor::PredictFunction const* pred_func_;
+  OutputBuffer* out_result;
+};
+struct OutputToken {
+  size_t result_size;
+};
+typedef tl2cgen::detail::threading_utils::custom_tpool::SPSC_Queue<InputToken>* spscq_in;
+typedef tl2cgen::detail::threading_utils::custom_tpool::SPSC_Queue<OutputToken>* spscq_out;
+using ThreadPool_ = tl2cgen::detail::threading_utils::custom_tpool::ThreadPool<InputToken,
+    OutputToken, tl2cgen::predictor::Predictor>;
+
+
+
+Predictor::~Predictor() {
+  if (thread_pool_handle_) {
+    Free();
+  }
+}
+void Predictor::Free() {
+  delete static_cast<ThreadPool_*>(thread_pool_handle_);
+}
+// Builds prediction function
+Predictor::Predictor(char const* libpath, int num_worker_thread) {
+  // printf("NUM_WORKER_THREADs %d\n", num_worker_thread); // 20
+  thread_config_ = tl2cgen::detail::threading_utils::ConfigureThreadConfig(num_worker_thread);
+  lib_ = std::make_unique<detail::SharedLibrary>(libpath);
+  using UnsignedQueryFunc = std::size_t (*)();
+  using StringQueryFunc = char const* (*)();
+  using FloatQueryFunc = float (*)();
+
+  /* 1. query # of output groups */
+  auto* num_class_query_func = lib_->LoadFunctionWithSignature<UnsignedQueryFunc>("get_num_class");
+  num_class_ = num_class_query_func();
+
+  /* 2. query # of features */
+  auto* num_feature_query_func
+      = lib_->LoadFunctionWithSignature<UnsignedQueryFunc>("get_num_feature");
+  num_feature_ = num_feature_query_func();
+  TL2CGEN_CHECK_GT(num_feature_, 0) << "num_feature cannot be zero";
+
+  /* 3. query # of pred_transform name */
+  auto* pred_transform_query_func
+      = lib_->LoadFunctionWithSignature<StringQueryFunc>("get_pred_transform");
+  pred_transform_ = pred_transform_query_func();
+
+  /* 4. query # of sigmoid_alpha */
+  auto* sigmoid_alpha_query_func
+      = lib_->LoadFunctionWithSignature<FloatQueryFunc>("get_sigmoid_alpha");
+  sigmoid_alpha_ = sigmoid_alpha_query_func();
+
+  /* 5. query # of ratio_c */
+  auto* ratio_c_query_func = lib_->LoadFunctionWithSignature<FloatQueryFunc>("get_ratio_c");
+  ratio_c_ = ratio_c_query_func();
+
+  /* 6. query # of global_bias */
+  auto* global_bias_query_func = lib_->LoadFunctionWithSignature<FloatQueryFunc>("get_global_bias");
+  global_bias_ = global_bias_query_func();
+
+  /* 7. Query the data type for thresholds and leaf outputs */
+  auto* threshold_type_query_func
+      = lib_->LoadFunctionWithSignature<StringQueryFunc>("get_threshold_type");
+  threshold_type_ = threshold_type_query_func();
+  auto* leaf_output_type_query_func
+      = lib_->LoadFunctionWithSignature<StringQueryFunc>("get_leaf_output_type");
+  leaf_output_type_ = leaf_output_type_query_func();
+
+  /* 8. load appropriate function for margin prediction */
+  TL2CGEN_CHECK_GT(num_class_, 0) << "num_class cannot be zero";
+  pred_func_ = std::make_unique<PredictFunction>(DataTypeFromString(threshold_type_),
+      DataTypeFromString(leaf_output_type_), *lib_, static_cast<int>(num_feature_),
+      static_cast<int>(num_class_));
+
+  thread_pool_handle_ = static_cast<ThreadPoolHandle>(
+      new ThreadPool_(20 - 1, this,[]
+      (spscq_in in_queue, spscq_out out_queue,const Predictor* predictor) {
+        predictor->exception_catcher_.Run([&]() {
+          InputToken input;
+          while (in_queue->pop(&input)) {
+            const size_t rbegin = input.rbegin;
+            const size_t rend = input.rend;
+            size_t result_size = predictor->pred_func_->PredictBatch(
+                input.dmat, rbegin, rend, input.pred_margin, input.out_result);
+            out_queue->push(OutputToken{result_size});
+          }
+        });
+      }));
+  // ThreadPool_ tp(nthread - 1, [this](spscq_in in_queue, spscq_out out_queue) {
+  //   exception_catcher_.Run([&]() {
+  //     InputToken input;
+  //     while (in_queue->pop(&input, 1)) {
+  //       const size_t rbegin = input.rbegin;
+  //       const size_t rend = input.rend;
+  //       size_t result_size = pred_func_->PredictBatch(
+  //           input.dmat, rbegin, rend, input.pred_margin, input.out_result);
+  //       out_queue->push(OutputToken{result_size}, 100);
+  //     }
+  //   });
+  // });
+}
+
+std::size_t Predictor::PredictBatch(
+    DMatrix const* dmat, int verbose, bool pred_margin, OutputBuffer* out_result) const {
+  std::size_t const num_row = dmat->GetNumRow();
+  if (num_row == 0) {
+    return 0;
+  }  
+  //printf("HERE\n");
+
+  double const tstart = GetTime();
+  std::size_t const nthread = std::min(static_cast<std::size_t>(thread_config_.nthread), num_row);
+
+  std::vector<std::size_t> const row_ptr = SplitBatch(dmat, nthread);  // Split batch
+  std::size_t total_size = 0;
+  std::vector<std::size_t> result_size(nthread);
+
+  // CUSTOM BEGIN
+  auto* pool = static_cast<ThreadPool_*>(thread_pool_handle_);
+
+  InputToken request{dmat, pred_margin, 0, num_row, pred_func_.get(), out_result};
+  OutputToken response;
+  for (size_t thread_id = 0; thread_id < nthread - 1; ++thread_id) {
+    request.rbegin = row_ptr[thread_id];
+    request.rend = row_ptr[thread_id + 1];
+    pool->submit_task(thread_id, request);
+  }
+
+  {
+    size_t const rbegin = row_ptr[nthread - 1];
+    size_t const rend = row_ptr[nthread];
+    size_t const query_result_size
+        = pred_func_->PredictBatch(dmat, rbegin, rend, pred_margin, out_result);
+    total_size += query_result_size;
+  }
+  double const s = GetTime();
+  for (size_t thread_id = 0; thread_id < nthread - 1; ++thread_id) {
+    if (pool->wait_for_task(thread_id, &response)) {
+      total_size += response.result_size;
+    }
+  }
+  double const e = GetTime();
+  printf("TOTAL: %f\n", e - s);
+
+  // printf("RES %d\n", total_size);
+
+  // tl2cgen::detail::threading_utils::custom_tpool::Custom_ParallelFor_ThreadPool(std::size_t(0),
+  //     nthread, dmat, row_ptr, out_result,
+  //     [&](std::size_t thread_id, std::size_t rbegin, std::size_t rend, OutputBuffer* out_result)
+  //     {
+  //       // printf("Thread_id %d s %d e %d \n", thread_id, rbegin, rend);
+
+  //      result_size[thread_id]
+  //          = pred_func_->PredictBatch(dmat, rbegin, rend, pred_margin, out_result);
+  //    });
+
+  // CUSTOM END
+
+  // tl2cgen::detail::threading_utils::ParallelFor(std::size_t(0), nthread, thread_config_,
+  // tl2cgen::detail::threading_utils::ParallelSchedule::Static(),
+
+  //    [&](std::size_t thread_id, int x) { //what is this int? => int val is just the thread_id??
+
+  //      std::size_t rbegin = row_ptr[thread_id];
+
+  //      std::size_t rend = row_ptr[thread_id + 1];
+
+  //      result_size[thread_id] = pred_func_->PredictBatch(dmat, rbegin, rend, pred_margin,
+  //      out_result);
+  //      //printf("X %d TID %d \n", x,thread_id);
+  //      //cout << "thread ID " << thread_id << " end \n";
+  //      //cout << "begin " << rbegin << " end \n";
+  //      //cout << "end " << rend << " end \n";
+  //    }); // This lambda expression is whats being paralellized
+
+  //tl2cgen::detail::threading_utils::custom_tpool::Custom_ParallelFor_ThreadPool(std::size_t(0),
+  //    nthread, dmat, row_ptr, pred_margin, out_result, pred_func_.get(), total_size);
+  //for (auto e : result_size) {
+  //  total_size += e;
+  //}
+  //  Re-shape output if total_size < dimension of out_result
+  if (total_size < QueryResultSize(dmat, 0, num_row)) {
+    TL2CGEN_CHECK_GT(num_class_, 1);
+
+    TL2CGEN_CHECK_EQ(total_size % num_row, 0);
+
+    std::size_t const query_size_per_instance = total_size / num_row;
+
+    TL2CGEN_CHECK_GT(query_size_per_instance, 0);
+
+    TL2CGEN_CHECK_LT(query_size_per_instance, num_class_);
+    std::visit(
+        [&, num_class = num_class_](auto&& pred_func_concrete, auto&& out_pred_ptr) {
+          using LeafOutputType =
+              typename std::remove_reference_t<decltype(pred_func_concrete)>::leaf_output_type;
+
+          using ExpectedLeafOutputType
+              = std::remove_pointer_t<std::remove_reference_t<decltype(out_pred_ptr)>>;
+
+          if constexpr (std::is_same_v<LeafOutputType, ExpectedLeafOutputType>) {
+            auto* out_result_ = static_cast<LeafOutputType*>(out_result->data());
+
+            for (std::size_t rid = 0; rid < num_row; ++rid) {
+              for (std::size_t k = 0; k < query_size_per_instance; ++k) {
+                out_result_[rid * query_size_per_instance + k] = out_result_[rid * num_class + k];
+              }
+            }
+          } else {
+            TL2CGEN_LOG(FATAL)
+                << "Type mismatch between LeafOutputType of the model and the output buffer. "
+                << "LeafOutputType = " << typeid(LeafOutputType).name()
+                << ", ExpectedLeafOutputType = " << typeid(ExpectedLeafOutputType).name();
+          }
+        },
+        pred_func_->variant_, out_result->variant_);
+  }
+  double const tend = GetTime();
+  if (verbose > 0) {
+    TL2CGEN_LOG(INFO) << "TL2cgen: Finished prediction in " << (tend - tstart) << " sec";
+  }
+  return total_size;
+}
+
+}  // namespace tl2cgen::predictor
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+custom_tpool.h
+#include <tl2cgen/data_matrix.h>
+#include <tl2cgen/detail/threading_utils/custom_tpool/safe_queue.h>
+#include <tl2cgen/detail/threading_utils/custom_tpool/spsc_queue.h>
+#include <tl2cgen/detail/threading_utils/omp_config.h>
+#include <tl2cgen/detail/threading_utils/parallel_for.h>
+#include <tl2cgen/logging.h>
+#include <tl2cgen/predictor.h>
+
+#include <chrono>
+#include <condition_variable>
+#include <cstddef>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <random>
+#include <thread>
+#include <vector>
+// using namespace std;
+
+namespace tl2cgen::detail::threading_utils::custom_tpool {
+/*
+idea: each thread will have its own local task queue and will be able to pop off multiple tasks from
+the global queue to reduce locking contention. idea: allow for task stealing
+
+*/
+inline double GetTime() {
+  return std::chrono::duration<double>(std::chrono::high_resolution_clock::now().time_since_epoch())
+      .count();
+}
+template <typename InputToken, typename OutputToken,typename TaskContext>
+class ThreadPool {
+  typedef tl2cgen::detail::threading_utils::custom_tpool::SPSC_Queue<InputToken> spscq_in;
+  typedef tl2cgen::detail::threading_utils::custom_tpool::SPSC_Queue<OutputToken> spscq_out;
+
+ public:
+  using Func = std::function<void(spscq_in*, spscq_out*,const TaskContext*)>;  // void (*)(spscq_in*, spscq_out*);
+  //
+
+  // using Func = void (*)(SPSC_Queue<InputToken>*, SPSC_Queue<OutputToken>*);
+  ThreadPool(int num_threads, const TaskContext* context,Func task) : num_worker_(num_threads), 
+      task_(task),context_(context) {
+    for (int i = 0; i < num_worker_; ++i) {
+      in_queue_.emplace_back(new SPSC_Queue<InputToken>());
+      out_queue_.emplace_back(new SPSC_Queue<OutputToken>());
+    }
+    workers_.resize(num_worker_);
+    for (int thread_id = 0; thread_id < num_threads; ++thread_id) {
+      workers_[thread_id]
+          = std::thread(task_, in_queue_[thread_id].get(), out_queue_[thread_id].get(),context_);
+    }
+  }
+  void submit_task(int thread_id, InputToken req) {
+    in_queue_[thread_id]->push(req);
+  }
+  bool wait_for_task(int thread_id, OutputToken* res) {
+    return out_queue_[thread_id]->pop(res);
+
+  }
+
+  ~ThreadPool() {
+    double const s1 = GetTime();
+    for (int i = 0; i < num_worker_; ++i) {
+      in_queue_[i]->terminate();
+      out_queue_[i]->terminate();
+      workers_[i].join();
+    }
+    double const e1 = GetTime();
+    //printf("JOIN: %f\n", e1 - s1);
+  }
+
+ private:
+  int num_worker_;
+  std::vector<std::thread> workers_;
+  std::vector<std::unique_ptr<SPSC_Queue<InputToken>>> in_queue_;
+  std::vector<std::unique_ptr<SPSC_Queue<OutputToken>>> out_queue_;
+  Func task_;
+  TaskContext const* context_;
+};
+
+template <typename IndexType, typename MatType, typename FuncType, typename LeafOutputType>
+inline void Custom_ParallelFor_ThreadPool(IndexType begin, IndexType end, MatType const* dmat,
+    std::vector<std::size_t> const& row_ptr, tl2cgen::predictor::OutputBuffer* out_result,
+    FuncType pred_func) {
+  ThreadPool tp(end);
+
+  for (IndexType i = begin; i < end; ++i) {
+    IndexType thread_id = i;
+    std::function<void()> func = [&, thread_id, dmat, out_result, pred_func]() {
+      std::size_t rbegin = row_ptr[thread_id];
+      std::size_t rend = row_ptr[thread_id + 1];
+
+      pred_func(thread_id, rbegin, rend, out_result);
+    };
+    tp.submit(func, thread_id);
+  }
+  // printf("Main Thread DONE\n");
+}
+
+}  // namespace tl2cgen::detail::threading_utils::custom_tpool
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+spsc_queue.h
+
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
+#include <queue>
+#include <thread>
+#include <vector>
+namespace tl2cgen::detail::threading_utils::custom_tpool {
+
+constexpr int const kL1CacheBytes = 64;
+template <typename T>
+class SPSC_Queue {
+ public:
+  SPSC_Queue()
+      : head_(0), tail_(0), stop_(false), pending_(0),capacity_(max_size), buffer_(new T[max_size]) {
+  
+        printf("head address: %d\n", (void*)&head_);
+        printf("tail address: %d\n", (void*)&tail_);
+        printf("stop address: %d\n", (void*)&stop_);
+        printf("pending address: %d\n", (void*)&pending_);
+        printf("\n");
+  
+  }
+
+  ~SPSC_Queue() {
+    delete[] buffer_;
+  }
+  size_t incr(size_t x) {
+    return (x + 1) % capacity_;
+  }
+
+  void terminate() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    stop_.store(true);
+    condition_.notify_all();
+  }
+
+  void push(const T& item) {
+    while (!enqueue(item)) {
+      // printf("yielding\n");
+      std::this_thread::yield();
+    }
+    if (pending_.fetch_add(1) == -1) {
+      std::unique_lock<std::mutex> lock(mutex_);
+      condition_.notify_one();
+    }
+  }
+
+  bool enqueue(const T& item) {
+    const size_t current_tail = tail_.load(std::memory_order_relaxed);
+    const size_t next_tail = incr(current_tail);
+
+    if (next_tail != head_.load(std::memory_order_acquire)) {
+      buffer_[current_tail] = item;
+      tail_.store(next_tail, std::memory_order_release);
+      return true;
+    }
+    return false;
+  }
+  // must maintain 1 empty slot between head and tail since otherwise head = tail => queue is empty,
+  // but its full.
+  bool pop(T* item) {
+    for (uint32_t i = 0; i < 300000 && pending_.load() == 0; ++i) {
+      std::this_thread::yield();
+    }
+    if (pending_.fetch_sub(1) == 0) {
+      // printf("waiting? %d\n", tid);
+      std::unique_lock<std::mutex> lock(mutex_);
+      condition_.wait(lock, [this] { return pending_.load() >= 0 || stop_.load(); });
+    }
+    // printf("SIZE %d\n", size());
+
+    if (stop_.load(std::memory_order_relaxed)) {
+      return false;
+    }
+    const size_t current_head = head_.load(std::memory_order_relaxed);
+    if (current_head == tail_.load(std::memory_order_acquire)) {
+      // printf("EMPTY\n");
+      return false;
+    }
+    *item = buffer_[current_head];
+    head_.store(incr(current_head), std::memory_order_release);
+    return true;
+  }
+  size_t size() {
+    return tail_.load(std::memory_order_relaxed) - head_.load(std::memory_order_relaxed);
+  }
+  bool full() {
+    size_t current_tail = tail_.load(std::memory_order_relaxed);
+    size_t next_tail = incr(current_tail);
+    return (next_tail == head_.load(std::memory_order_relaxed));
+  }
+
+  bool empty() {
+    return tail_.load(std::memory_order_relaxed) == head_.load(std::memory_order_relaxed);
+  }
+  bool do_stop() {
+    return stop_.load();
+  }
+
+ private:
+  //typedef char cache_line_pad_t[kL1CacheBytes];
+  //cache_line_pad_t pad0_;
+  static constexpr int const max_size = 2;
+  T* const buffer_;
+
+  //cache_line_pad_t pad1_;
+  alignas(std::hardware_destructive_interference_size) std::atomic<size_t> head_;
+
+  //cache_line_pad_t pad2_;
+  alignas(std::hardware_destructive_interference_size) std::atomic<size_t> tail_;
+
+  //cache_line_pad_t pad3_;
+  alignas(std::hardware_destructive_interference_size) std::atomic<bool> stop_;
+
+  //cache_line_pad_t pad4_;
+  alignas(std::hardware_destructive_interference_size) std::atomic<int8_t> pending_;
+
+  char padding_[std::hardware_destructive_interference_size - sizeof(std::size_t)];
+
+
+  size_t const capacity_;
+  std::mutex mutex_;
+  std::condition_variable condition_;
+  // std::atomic<size_t> size_;
+};
+
+}  // namespace tl2cgen::detail::threading_utils::custom_tpool
+
+
+
+
+
+
+
+basic thread pool
+
+
+ public:
+  ///using Task = std::function<void>();
+  explicit ThreadPool(std::size_t numThreads) {
+    start(numThreads);
+  }
+  ~ThreadPool() {
+    stop();
+  }
+  template <typename F>
+  void enqueue(F&& task) {
+    std::unique_lock<std::mutex> lock{mEventMutex};
+    mTasks.emplace(std::forward<F>(task));
+    lock.unlock();
+    mEventVar.notify_one();
+  }
+
+ private:
+  std::vector<std::thread> mThreads;
+  std::condition_variable mEventVar;
+  std::mutex mEventMutex;
+  bool mStopping = false;
+  std::queue<std::function<void()>> mTasks;
+  void start(std::size_t numThreads) {
+    for (auto i = 0u; i < numThreads; ++i) {
+      mThreads.emplace_back([this] {
+        while (true) {
+          std::unique_lock<std::mutex> lock{mEventMutex};
+          
+          mEventVar.wait(lock, [this] { return mStopping || !mTasks.empty(); });
+          if (mStopping && mTasks.empty()) {
+            return;
+          }
+          auto task = std::move(mTasks.front());
+          mTasks.pop();
+          lock.unlock();
+          task();
+        }
+      });
+    }
+  }
+  void stop() noexcept {
+    std::unique_lock<std::mutex> lock(mEventMutex);
+    mStopping = true;
+    lock.unlock();
+    mEventVar.notify_all();
+    for (auto& thread : mThreads) {
+      thread.join();
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+

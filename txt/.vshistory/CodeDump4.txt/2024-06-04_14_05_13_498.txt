@@ -1,0 +1,28 @@
+  
+static task assignment
+ 
+  double const st_1 = GetTime();
+  InputToken token{dmat, -1, -1, pred_margin, out_result, pred_func_};
+  std::vector<std::thread> threads(end);
+  std::vector<std::size_t> result_size(end);
+  std::size_t total_size = 0;
+  for (IndexType i = begin; i < end; ++i) {
+    token.rbegin = row_ptr[i];
+    token.rend = row_ptr[i + 1];
+    threads[i] = std::thread([=, &result_size,&total_size]() {
+      result_size[i] = token.pred_func_->PredictBatch(
+          token.dmat, token.rbegin, token.rend, token.pred_margin, token.out_result);
+
+      total_size += result_size[i];
+        
+    });
+  }
+  double const et_1 = GetTime();
+
+  double const st_2 = GetTime();
+
+  for (int i = 0; i < end; ++i) {
+    threads[i].join();
+    //total_size += result_size[i];
+  }
+  double const et_2 = GetTime();

@@ -1,0 +1,145 @@
+custom_tpool.h
+
+#include <tl2cgen/data_matrix.h>
+#include <tl2cgen/detail/threading_utils/custom_tpool/safe_queue.h>
+#include <tl2cgen/detail/threading_utils/custom_tpool/spsc_queue.h>
+#include <tl2cgen/logging.h>
+#include <tl2cgen/predictor.h>
+
+#include <chrono>
+#include <condition_variable>
+#include <cstddef>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <random>
+#include <thread>
+#include <vector>
+// using namespace std;
+
+namespace tl2cgen::detail::threading_utils::custom_tpool {
+/*
+TODO: Timing breakdown, static assignment of tasks, breakdown task into multiple tasks
+(rbegin=rend), msg Philip why threadpool
+
+*/
+inline double GetTime() {
+  return std::chrono::duration<double>(std::chrono::high_resolution_clock::now().time_since_epoch())
+      .count();
+}
+struct InputToken {
+  std::size_t num_tasks;
+  tl2cgen::DMatrix const* dmat;
+  std::size_t rbegin;
+  std::size_t rend;
+  bool pred_margin;
+  tl2cgen::predictor::OutputBuffer* out_result;
+  tl2cgen::predictor::PredictFunction const* pred_func_;
+};
+
+struct OutputToken {
+  size_t result_size;
+};
+class ThreadPool {
+
+ public:
+  void do_work(size_t thread_id, SPSC_Queue<InputToken>* my_tasks, SPSC_Queue<OutputToken>* my_results) {
+    // std::function<void()> task;
+    InputToken token;
+    double const st_6 = GetTime();
+    std::size_t completed_cnt = 0;
+    while (true) {
+      if (my_tasks->pop(&token, thread_id)) {
+        double const st_4 = GetTime();
+        std::size_t result_size = token.pred_func_->PredictBatch(
+            token.dmat, token.rbegin, token.rend, token.pred_margin, token.out_result);
+        double const et_4 = GetTime();
+        printf("TIME PREDICT ONE: %f\n", et_4 - st_4);
+        my_results->push(OutputToken{result_size});
+        completed_cnt++;
+      }
+      if (completed_cnt == token.num_tasks) {
+        double const et_6 = GetTime();
+        printf("THREAD %d FINISHED IN: %f\n", thread_id, et_6 - st_6);
+        return;
+      }
+    }
+    // stop_flags_[thread_id].store(true, std::memory_order_relaxed);
+  }
+  ThreadPool(int num_threads)
+      : num_worker_(num_threads),
+        workers_(num_threads),
+        task_queues_(num_threads),
+        result_queues_(num_threads) {
+
+    for (int thread_id = 0; thread_id < num_threads; ++thread_id) {
+      workers_[thread_id] = std::thread(
+          &ThreadPool::do_work, this, thread_id, task_queues_[thread_id].get(), result_queues_[thread_id].get());
+    }
+  }
+  // template <typename Task>
+  void submit_task(int thread_id, InputToken token) {
+    double const st_3 = GetTime();
+    task_queues_[thread_id]->push(token);
+    double const et_3 = GetTime();
+    printf("TIME PUSH ONE: %f\n", et_3 - st_3);
+  }
+
+  std::size_t wait_for_complete() {
+    double const st_2 = GetTime();
+    std::size_t total_size = 0;
+    OutputToken response;
+    //for (int thread_id = 0; thread_id < num_worker_; ++thread_id) {
+    //  if (result_queues_[thread_id]->pop(&response, 100 + thread_id)) {
+    //    total_size += response.result_size;
+    //  }
+    //}
+    //double const et_2 = GetTime();
+    //printf("TIME WFC: %f\n", et_2 - st_2);
+    return total_size;
+  }
+
+  ~ThreadPool() {
+    double const st_5 = GetTime();
+
+    for (int i = 0; i < num_worker_; ++i) {
+      workers_[i].join();
+    }
+    double const et_5 = GetTime();
+    printf("TIME JOIN: %f\n", et_5 - st_5);
+  }
+
+ private:
+  int num_worker_;
+  std::mutex mutex_;
+  std::vector<std::thread> workers_;
+  std::vector<std::unique_ptr<SPSC_Queue<InputToken>>> task_queues_;
+  std::vector<std::unique_ptr<SPSC_Queue<OutputToken>>> result_queues_;
+  bool stop{false};
+};
+
+template <typename IndexType, typename MatType>
+inline std::size_t Custom_ParallelFor_ThreadPool(IndexType begin, IndexType end,
+    MatType const* dmat, std::vector<std::size_t> const& row_ptr,
+    tl2cgen::predictor::OutputBuffer* out_result, bool pred_margin,
+    tl2cgen::predictor::PredictFunction const* pred_func_) {
+  ThreadPool * tp = new ThreadPool(end);
+
+  double const st_1 = GetTime();
+  InputToken token{1, dmat, -1, -1, pred_margin, out_result, pred_func_};
+
+  for (IndexType i = begin; i < end; ++i) {
+    IndexType thread_id = i;
+    token.rbegin = row_ptr[i];
+    token.rend = row_ptr[i + 1];
+    tp->submit_task(thread_id, token);
+  }
+  double const et_1 = GetTime();
+  printf("TIME SUBMIT: %f\n", et_1 - st_1);
+
+  return tp->wait_for_complete();
+}
+
+}  // namespace tl2cgen::detail::threading_utils::custom_tpool
