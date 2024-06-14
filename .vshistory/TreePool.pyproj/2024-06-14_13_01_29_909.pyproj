@@ -1104,8 +1104,6 @@
     <Folder Include="tl2cgen\tests\python\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include=".gitattributes" />
-    <Content Include=".gitignore" />
     <Content Include="mymodel.dll" />
     <Content Include="mymodel.dylib" />
     <Content Include="mymodel.so" />
