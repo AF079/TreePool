@@ -1,0 +1,237 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{915F3EEE-F34A-3E4A-A1D8-0E47FBB6B571}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>tl2cgen</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">tl2cgen.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">tl2cgen</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.dll</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">tl2cgen.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">tl2cgen</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.dll</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\include;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <OpenMPSupport>true</OpenMPSupport>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;TL2CGEN_OPENMP_SUPPORT;CMAKE_INTDIR="Debug";tl2cgen_EXPORTS</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;TL2CGEN_OPENMP_SUPPORT;CMAKE_INTDIR=\"Debug\";tl2cgen_EXPORTS</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\include;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\include;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>_deps\treelite-build\treelite_static.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>C:/Users/mcshr/OneDrive/Everything/Mod12/TreePool/tl2cgen/build/tl2cgen.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/mcshr/OneDrive/Everything/Mod12/TreePool/tl2cgen/build/tl2cgen.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\include;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <OpenMPSupport>true</OpenMPSupport>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;TL2CGEN_OPENMP_SUPPORT;CMAKE_INTDIR="Release";tl2cgen_EXPORTS</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;TL2CGEN_OPENMP_SUPPORT;CMAKE_INTDIR=\"Release\";tl2cgen_EXPORTS</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\include;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\include;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>_deps\treelite-build\treelite_static.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>C:/Users/mcshr/OneDrive/Everything/Mod12/TreePool/tl2cgen/build/tl2cgen.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/mcshr/OneDrive/Everything/Mod12/TreePool/tl2cgen/build/tl2cgen.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/mcshr/OneDrive/Everything/Mod12/TreePool/tl2cgen/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/mcshr/OneDrive/Everything/Mod12/TreePool/tl2cgen -BC:/Users/mcshr/OneDrive/Everything/Mod12/TreePool/tl2cgen/build --check-stamp-file C:/Users/mcshr/OneDrive/Everything/Mod12/TreePool/tl2cgen/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\CMake\share\cmake-3.29\Modules\BasicConfigVersion-SameMajorVersion.cmake.in;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakePackageConfigHelpers.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\ExternalProject\shared_internal_commands.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\FetchContent.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\FetchContent\CMakeLists.cmake.in;C:\Program Files\CMake\share\cmake-3.29\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\GNUInstallDirs.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\WriteBasicConfigVersionFile.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\CMakeFiles\3.29.2\CMakeCCompiler.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\CMakeFiles\3.29.2\CMakeCXXCompiler.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\CMakeFiles\3.29.2\CMakeRCCompiler.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\CMakeFiles\3.29.2\CMakeSystem.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\cmake\ExternalLibs.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\cmake\TL2cgenConfig.cmake.in;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\cmake\Utils.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\cmake\Version.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\cmake\version.h.in;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/mcshr/OneDrive/Everything/Mod12/TreePool/tl2cgen/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/mcshr/OneDrive/Everything/Mod12/TreePool/tl2cgen -BC:/Users/mcshr/OneDrive/Everything/Mod12/TreePool/tl2cgen/build --check-stamp-file C:/Users/mcshr/OneDrive/Everything/Mod12/TreePool/tl2cgen/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\CMake\share\cmake-3.29\Modules\BasicConfigVersion-SameMajorVersion.cmake.in;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakePackageConfigHelpers.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\ExternalProject\shared_internal_commands.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\FetchContent.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\FetchContent\CMakeLists.cmake.in;C:\Program Files\CMake\share\cmake-3.29\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\GNUInstallDirs.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\WriteBasicConfigVersionFile.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\CMakeFiles\3.29.2\CMakeCCompiler.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\CMakeFiles\3.29.2\CMakeCXXCompiler.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\CMakeFiles\3.29.2\CMakeRCCompiler.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\CMakeFiles\3.29.2\CMakeSystem.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\cmake\ExternalLibs.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\cmake\TL2cgenConfig.cmake.in;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\cmake\Utils.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\cmake\Version.cmake;C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\cmake\version.h.in;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\annotator.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\filesystem.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\logging.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\c_api.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\c_api_error.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\c_api_treelite_bridge.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\ast_native.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\compiler.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\elf_formatter.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\failsafe.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\compiler\pred_transform.cc.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\build.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\dump.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\fold_code.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\is_categorical_array.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\load_data_counts.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\quantize.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\split.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\code_folder_template.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\header_template.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\main_template.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\compiler\templates\pred_transform.cc.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\qnode_template.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\predictor.obj" />
+    <Object Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.dir\$(Configuration)\shared_library.obj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\ZERO_CHECK.vcxproj">
+      <Project>{82B4F614-DACC-306B-9B0D-16BA3408DEC8}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\src\obj_tl2cgen.vcxproj">
+      <Project>{215D31EA-F7C4-3724-BBA9-D1A4426EB292}</Project>
+      <Name>obj_tl2cgen</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\_deps\treelite-build\src\objtreelite.vcxproj">
+      <Project>{BD155E07-4E72-38E0-9E2F-EA7DD65B3B8C}</Project>
+      <Name>objtreelite</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\_deps\treelite-build\src\objtreelite_common.vcxproj">
+      <Project>{70A29BAD-D79A-3F0D-A054-7D59DD53BD75}</Project>
+      <Name>objtreelite_common</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\mcshr\OneDrive\Everything\Mod12\TreePool\tl2cgen\build\_deps\treelite-build\treelite_static.vcxproj">
+      <Project>{EBE53F0B-0EF1-3E6C-BFCD-50363AFA6C79}</Project>
+      <Name>treelite_static</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

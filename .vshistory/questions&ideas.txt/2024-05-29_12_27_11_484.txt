@@ -1,0 +1,352 @@
+
+
+What are kAuto,kDynamic,kStatic,kGuided for? 
+How is the Dmat constructed, are the trees stored here?
+How is the random forest turned into datamatrices? 
+
+Idea(s):
+- function for extracting depth from trees
+- a way to control which trees get placed into which batches (not arbitrary assignment)
+- function to sort trees based on depth
+
+[t1,t2,t3,...,tn] d(t1) <= d(tn)
+[3,3,4,5,7,8,10,15,20,23,23,25,25,30] : 14
+
+[small,med,large]
+Assume a prediction for a tree with 1 node is 1 second
+[[3,3,4,5,7], [8,10,15,20], [23,23,25,25,30]]
+
+Batch set 1:
+[23,23,25,25,30] = 126
+[8,10,15,20] = 53
+[3,3,4,5,7] = 22
+
+Batch set 2:
+[30,8,3] = 41
+[25,10,3] = 38
+[25,15,4] = 44
+[23,20,5] = 48
+[23,7] = 30
+
+=> Batch set 1 will take 126 seconds and Batc set 2 will take 48
+=> SAT solver
+=> minimize the prediction times for all batches => minimize largest prediction time for a single batch 
+
+- function to generate optimal batch arrangement
+	- compute number of threads needed
+	- #threads ~ #large trees
+
+[1,1,2,2,3,20,25,41]
+mean = 11.8 => large = anything >= 12
+=> 3 threads
+[41] = 41
+[25,1,3] = 29
+[20,2,1,2] = 25
+
+
+[3,3,4,5,7,8,10,15,20,23,23,25,25,30] : 14
+# threads = 7
+
+	3 3 4 5 7 8 10
+30  0 0 0 0 0 0 0
+25  0 0 0 0 0 0 0
+25  0 0 0 0 0 0 0
+23  0 0 0 0 0 0 0
+23  0 0 0 0 0 0 0
+20  0 0 0 0 0 0 0
+15  0 0 0 0 0 0 0
+
+
+
+
+Experiment:
+
+XGBoost, trains a model -> save as json_config -> distributes json_config -> load model using json_config -> make prediction. (overhead?)
+train -> compile to native binary/common-spec -> distribute -> make prediction. (less overhead?)
+
+
+Paper 1: Fast Gradien Boosted Decision Tree for Multioutput problems
+
+- Accelerated training process of GBDT when the outputs are multidimensional (multiclass/multilabel classification, multioutput regression)
+- Develop a scoring function to find the best split of decision tree
+- Scoring function implemented in SketchBoost
+- DT's are useful methods for solving prediction problems in both classification and regression  domains.
+- Dominant tool in applications where tabular data is abundant  (e-commerce, financial and retail industries)
+
+Paper 2: CudaRF: A CUDA-based Implementation of Random Forests
+
+- GPU-based parallel implementation of Random Forests
+- GPGPU: General purpose computing on graphics processing units
+- Difficult to optimize DT-based problems for GPU-based execution
+- Both the training phase and classification phase are parrallelized in CUDA implementation
+- CUDA: Compute Unified Device Architecture is an API extension to C and contains specific ISA for access to the parallel compute engine in the GPU
+
+
+
+
+
+head address: 2019025928
+tail address: 2019025936
+stop address: 2019025944
+pending address: 2019025945
+
+head address: 2019022856
+tail address: 2019022864
+stop address: 2019022872
+pending address: 2019022873
+
+head address: 2019023368
+tail address: 2019023376
+stop address: 2019023384
+pending address: 2019023385
+
+head address: 2019027976
+tail address: 2019027984
+stop address: 2019027992
+pending address: 2019027993
+
+head address: 2019029512
+tail address: 2019029520
+stop address: 2019029528
+pending address: 2019029529
+
+head address: 2019021576
+tail address: 2019021584
+stop address: 2019021592
+pending address: 2019021593
+
+head address: 2019028744
+tail address: 2019028752
+stop address: 2019028760
+pending address: 2019028761
+
+head address: 2019026440
+tail address: 2019026448
+stop address: 2019026456
+pending address: 2019026457
+
+head address: 2019016712
+tail address: 2019016720
+stop address: 2019016728
+pending address: 2019016729
+
+head address: 2019014408
+tail address: 2019014416
+stop address: 2019014424
+pending address: 2019014425
+
+head address: 2019023112
+tail address: 2019023120
+stop address: 2019023128
+pending address: 2019023129
+
+head address: 2019015944
+tail address: 2019015952
+stop address: 2019015960
+pending address: 2019015961
+
+head address: 2019015432
+tail address: 2019015440
+stop address: 2019015448
+pending address: 2019015449
+
+head address: 2019023624
+tail address: 2019023632
+stop address: 2019023640
+pending address: 2019023641
+
+head address: 2019019528
+tail address: 2019019536
+stop address: 2019019544
+pending address: 2019019545
+
+head address: 2019029256
+tail address: 2019029264
+stop address: 2019029272
+pending address: 2019029273
+
+head address: 2019015688
+tail address: 2019015696
+stop address: 2019015704
+pending address: 2019015705
+
+head address: 2019026696
+tail address: 2019026704
+stop address: 2019026712
+pending address: 2019026713
+
+head address: 2019019784
+tail address: 2019019792
+stop address: 2019019800
+pending address: 2019019801
+
+head address: 2019020040
+tail address: 2019020048
+stop address: 2019020056
+pending address: 2019020057
+
+head address: 2019021064
+tail address: 2019021072
+stop address: 2019021080
+pending address: 2019021081
+
+head address: 2019023880
+tail address: 2019023888
+stop address: 2019023896
+pending address: 2019023897
+
+head address: 2019024136
+tail address: 2019024144
+stop address: 2019024152
+pending address: 2019024153
+
+head address: 2019027464
+tail address: 2019027472
+stop address: 2019027480
+pending address: 2019027481
+
+head address: 2019024392
+tail address: 2019024400
+stop address: 2019024408
+pending address: 2019024409
+
+head address: 2019024648
+tail address: 2019024656
+stop address: 2019024664
+pending address: 2019024665
+
+
+
+
+
+padding:
+
+head address: 803706904
+tail address: 803706976
+stop address: 803707048
+pending address: 803707113
+
+head address: 787202472
+tail address: 787202544
+stop address: 787202616
+pending address: 787202681
+
+head address: 814191528
+tail address: 814191600
+stop address: 814191672
+pending address: 814191737
+
+head address: 800547176
+tail address: 800547248
+stop address: 800547320
+pending address: 800547385
+
+head address: 820672712
+tail address: 820672784
+stop address: 820672856
+pending address: 820672921
+
+head address: 820671176
+tail address: 820671248
+stop address: 820671320
+pending address: 820671385
+
+head address: 820674760
+tail address: 820674832
+stop address: 820674904
+pending address: 820674969
+
+head address: 820673224
+tail address: 820673296
+stop address: 820673368
+pending address: 820673433
+
+head address: 820673736
+tail address: 820673808
+stop address: 820673880
+pending address: 820673945
+
+head address: 820669640
+tail address: 820669712
+stop address: 820669784
+pending address: 820669849
+
+head address: 820675272
+tail address: 820675344
+stop address: 820675416
+pending address: 820675481
+
+head address: 820672200
+tail address: 820672272
+stop address: 820672344
+pending address: 820672409
+
+head address: 820674248
+tail address: 820674320
+stop address: 820674392
+pending address: 820674457
+
+head address: 820675784
+tail address: 820675856
+stop address: 820675928
+pending address: 820675993
+
+head address: 820670664
+tail address: 820670736
+stop address: 820670808
+pending address: 820670873
+
+head address: 820676808
+tail address: 820676880
+stop address: 820676952
+pending address: 820677017
+
+head address: 820671688
+tail address: 820671760
+stop address: 820671832
+pending address: 820671897
+
+head address: 820676296
+tail address: 820676368
+stop address: 820676440
+pending address: 820676505
+
+head address: 820670152
+tail address: 820670224
+stop address: 820670296
+pending address: 820670361
+
+head address: 820279688
+tail address: 820279760
+stop address: 820279832
+pending address: 820279897
+
+head address: 820276104
+tail address: 820276176
+stop address: 820276248
+pending address: 820276313
+
+head address: 820284296
+tail address: 820284368
+stop address: 820284440
+pending address: 820284505
+
+head address: 820285320
+tail address: 820285392
+stop address: 820285464
+pending address: 820285529
+
+head address: 820285832
+tail address: 820285904
+stop address: 820285976
+pending address: 820286041
+
+head address: 820286344
+tail address: 820286416
+stop address: 820286488
+pending address: 820286553
+
+head address: 820289928
+tail address: 820290000
+stop address: 820290072
+pending address: 820290137
